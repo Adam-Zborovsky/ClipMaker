@@ -23,18 +23,40 @@ def create_video_clips():
             video_file = video_files[1]
             if video_file_duration < 30:
                 os.remove(video_file)
+                with open("last_end_time.txt", "w") as f:   
+                    f.write("0")
         
+        #Get start time for video
+        start_time = 0
+        with open("last_end_time.txt", "r") as f:  
+            file_content = f.read().strip() 
+            try:
+                start_time = float(file_content)
+            except ValueError:
+                print(f"Error: Invalid value in last_end_time.txt: '{file_content}'")
+                start_time = 0
 
         # Create a video clip with the same length as the audio file
         video_clip = VideoFileClip(video_folder +'/'+ video_file)
-        video_clip = video_clip.subclip(0, audio_duration)
-        video_clip = video_clip.set_audio(audio_clip)
-        output_path = os.path.join(output_folder, f"{audio_file[:-4]}.mp4")
-        video_clip.write_videofile(output_path, codec='libx264')
+        video_clip_subclip = video_clip.subclip(start_time, start_time + audio_duration)
+        video_clip_subclip = video_clip_subclip.set_audio(audio_clip)
         
-        # Modify the original video by removing the used segment
-        remaining_video_clip = video_clip.subclip(audio_duration)
-        remaining_video_clip.write_videofile(os.path.join(video_folder, video_file), codec='libx264')
+
+        # Set aspect ratio for mobile and crop the middle part
+        mobile_aspect_ratio = (9, 16)
+        video_clip = video_clip.resize(height=mobile_aspect_ratio[1])
+        video_clip = video_clip.crop(
+            x_center=video_clip.w / 2,
+            y_center=video_clip.h / 2,
+            width=video_clip.h * mobile_aspect_ratio[0] / mobile_aspect_ratio[1],
+            height=video_clip.h
+        )
+
+        output_path = os.path.join(output_folder, f"{audio_file[:-4]}.mp4")
+        video_clip_subclip.write_videofile(output_path, codec='libx264')
+    
+        with open("last_end_time.txt", "w") as f:   
+            f.write(str(start_time+audio_duration))
 
         print(f"Created video clip: {output_path}")
         os.remove(audio_file)
@@ -44,5 +66,5 @@ if __name__ == '__main__':
         if not os.path.exists(folder):
             os.makedirs(folder)
 
-
+    input('Prees enter when resources are ready')
     create_video_clips()
