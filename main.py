@@ -7,6 +7,22 @@ video_folder = script_dir + '/resources/video'
 output_folder = script_dir + '/output'
 
 
+def crop_video(input_path, output_path, aspect_ratio=(9, 16)):
+    # Load the video
+    video_clip = VideoFileClip(input_path)
+
+    # Calculate the cropping dimensions
+    width, height = video_clip.size
+    new_width = min(width, height * aspect_ratio[0] / aspect_ratio[1])
+    new_height = min(height, width * aspect_ratio[1] / aspect_ratio[0])
+    x_offset = (width - new_width) / 2
+    y_offset = (height - new_height) / 2
+
+    # Crop and save the video
+    cropped_clip = video_clip.crop(x_center=x_offset + new_width / 2, y_center=y_offset + new_height / 2, width=new_width, height=new_height)
+    cropped_clip.write_videofile(output_path, codec='libx264')
+    
+
 def create_video_clips():
     audio_files = os.listdir(audio_folder)
 
@@ -24,10 +40,10 @@ def create_video_clips():
             if video_file_duration < 30:
                 os.remove(video_file)
                 with open("last_end_time.txt", "w") as f:   
-                    f.write("0")
+                    f.write("10")
         
         #Get start time for video
-        start_time = 0
+        start_time=0
         with open("last_end_time.txt", "r") as f:  
             file_content = f.read().strip() 
             try:
@@ -40,26 +56,18 @@ def create_video_clips():
         video_clip = VideoFileClip(video_folder +'/'+ video_file)
         video_clip_subclip = video_clip.subclip(start_time, start_time + audio_duration)
         video_clip_subclip = video_clip_subclip.set_audio(audio_clip)
-        
-
+        video_clip_subclip.write_videofile("To_Crop.mp4", codec='libx264')
+   
         # Set aspect ratio for mobile and crop the middle part
-        mobile_aspect_ratio = (9, 16)
-        video_clip = video_clip.resize(height=mobile_aspect_ratio[1])
-        video_clip = video_clip.crop(
-            x_center=video_clip.w / 2,
-            y_center=video_clip.h / 2,
-            width=video_clip.h * mobile_aspect_ratio[0] / mobile_aspect_ratio[1],
-            height=video_clip.h
-        )
+        output_path = output_folder +'/'+ f"{audio_file.split('.')[0]}.mp4"
+        crop_video("To_Crop.mp4", output_path)
+        os.remove("To_Crop.mp4")
 
-        output_path = os.path.join(output_folder, f"{audio_file[:-4]}.mp4")
-        video_clip_subclip.write_videofile(output_path, codec='libx264')
-    
         with open("last_end_time.txt", "w") as f:   
             f.write(str(start_time+audio_duration))
 
         print(f"Created video clip: {output_path}")
-        os.remove(audio_file)
+        os.remove(audio_folder +'/'+ audio_file)
 
 if __name__ == '__main__':
     for folder in [audio_folder, video_folder, output_folder]:
