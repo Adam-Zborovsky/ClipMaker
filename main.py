@@ -1,25 +1,27 @@
 from moviepy.editor import VideoFileClip, AudioFileClip
 import os
 
-def create_video_clips(audio_folder, video_folder, output_folder):
-    audio_files = [f for f in os.listdir(audio_folder) if f.endswith('.mp3')]
+script_dir = os.path.dirname(os.path.realpath(__file__))
+audio_folder = script_dir + 'resources/audio'
+video_folder = script_dir + 'resources/video'
+output_folder = script_dir + 'output'
+
+
+def create_video_clips():
+    audio_files = os.listdir(audio_folder)
 
     for audio_file in audio_files:
         audio_clip = AudioFileClip(os.path.join(audio_folder, audio_file))
         audio_duration = audio_clip.duration
 
-        # Find a video file that is long enough
-        video_files = [f for f in os.listdir(video_folder) if f.endswith('.mp4')]
-        video_file = None
-        for vf in video_files:
-            video_clip = VideoFileClip(os.path.join(video_folder, vf))
-            if video_clip.duration >= audio_duration:
-                video_file = vf
-                break
-
-        if not video_file:
-            print(f"No suitable video found for {audio_file}")
-            continue
+        #Check if Video is long enough and set Video_file
+        video_files = os.listdir(video_folder)
+        video_file = video_files[0]
+        if video_file.duration < audio_duration:
+            video_file = video_files[1]
+            if video_file.duration < 30:
+                os.remove(video_file)
+        
 
         # Create a video clip with the same length as the audio file
         video_clip = VideoFileClip(os.path.join(video_folder, video_file))
@@ -27,11 +29,14 @@ def create_video_clips(audio_folder, video_folder, output_folder):
         video_clip = video_clip.set_audio(audio_clip)
         output_path = os.path.join(output_folder, f"{audio_file[:-4]}.mp4")
         video_clip.write_videofile(output_path, codec='libx264')
+        
+        # Modify the original video by removing the used segment
+        remaining_video_clip = video_clip.subclip(audio_duration)
+        remaining_video_clip.write_videofile(os.path.join(video_folder, video_file), codec='libx264')
+
+
 
         print(f"Created video clip: {output_path}")
 
 if __name__ == '__main__':
-    audio_folder = 'path/to/audio/folder'
-    video_folder = 'path/to/video/folder'
-    output_folder = 'path/to/output/folder'
-    create_video_clips(audio_folder, video_folder, output_folder)
+    create_video_clips()
