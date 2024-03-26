@@ -35,13 +35,6 @@ def create_video_clips():
         video_file = video_files[0]
         video_file_duration = VideoFileClip(video_folder +'/'+ video_file).duration
         
-        if video_file_duration < audio_duration:
-            video_file = video_files[1]
-            if video_file_duration < 30:
-                os.remove(video_file)
-                with open("last_end_time.txt", "w") as f:   
-                    f.write("10")
-        
         #Get start time for video
         start_time=0
         with open("last_end_time.txt", "r") as f:  
@@ -52,6 +45,13 @@ def create_video_clips():
                 print(f"Error: Invalid value in last_end_time.txt: '{file_content}'")
                 start_time = 0
 
+        if video_file_duration - start_time  < audio_duration:
+            video_file = video_files[1]
+            if video_file_duration - start_time < 30:
+                os.remove(video_file)
+                with open("last_end_time.txt", "w") as f:   
+                    f.write("10")
+        
         # Create a video clip with the same length as the audio file
         video_clip = VideoFileClip(video_folder +'/'+ video_file)
         video_clip_subclip = video_clip.subclip(start_time, start_time + audio_duration)
