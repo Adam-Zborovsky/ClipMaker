@@ -75,4 +75,9 @@ if __name__ == '__main__':
             os.makedirs(folder)
 
     input('Prees enter when resources are ready')
-    create_video_clips()
+    if os.listdir(video_folder) == 0:
+        print('Resource Video Folder Is Empty')
+    if os.listdir(audio_folder) == 0:
+        print('Resource Audio Folder Is Empty')
+    if os.listdir(video_folder) != 0 and os.listdir(audio_folder) != 0:
+        create_video_clips()
