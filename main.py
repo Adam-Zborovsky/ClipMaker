@@ -46,7 +46,10 @@ def create_video_clips():
                 start_time = 0
 
         if video_file_duration - start_time  < audio_duration:
-            video_file = video_files[1]
+            if len(video_files) > 1:
+                video_file = video_files[1]
+            else:
+                print('No Video file')
             if video_file_duration - start_time < 30:
                 os.remove(video_file)
                 with open("last_end_time.txt", "w") as f:   
@@ -75,9 +78,9 @@ if __name__ == '__main__':
             os.makedirs(folder)
 
     input('Prees enter when resources are ready')
-    if os.listdir(video_folder) == 0:
+    if os.listdir(video_folder) == []:
         print('Resource Video Folder Is Empty')
-    if os.listdir(audio_folder) == 0:
+    if os.listdir(audio_folder) == []:
         print('Resource Audio Folder Is Empty')
-    if os.listdir(video_folder) != 0 and os.listdir(audio_folder) != 0:
+    if os.listdir(video_folder) != [] and os.listdir(audio_folder) != []:
         create_video_clips()
